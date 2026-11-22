@@ -1,0 +1,11 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.jabran/ifrs9-credit-loss-agent",
+  "title": "IFRS 9 and IFRS 7 Credit Loss Agent",
+  "description": "Classification, effective interest, expected credit losses, POCI, modifications, hedge...",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/jabran/ifrs9-credit-loss-agent",
+    "source": "github"
+  }
+}

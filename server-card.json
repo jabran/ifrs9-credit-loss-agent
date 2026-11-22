@@ -1,0 +1,1686 @@
+{
+  "serverInfo": {
+    "name": "ifrs9-credit-loss-agent",
+    "title": "IFRS 9 and IFRS 7 Credit Loss Agent",
+    "version": "1.0.0"
+  },
+  "description": "Classification, effective interest, expected credit losses, POCI, modifications, hedge accounting and the matching IFRS 7 risk disclosures. Demo and educational use only. No liability assumed for results. Not professional advice.",
+  "transport": {
+    "type": "stdio",
+    "command": "node",
+    "args": [
+      "dist/server.mjs"
+    ]
+  },
+  "capabilities": {
+    "tools": {},
+    "prompts": {},
+    "resources": {}
+  },
+  "tools": [
+    {
+      "name": "agent_about",
+      "title": "IFRS 9 and IFRS 7 Credit Loss Agent: what this agent covers",
+      "description": "Lists the standards and tools in this agent, the order to use them in, and the terms of use.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_classification",
+      "title": "IFRS 9: Classification of financial instruments",
+      "description": "Classifies a financial asset (amortised cost, FVOCI debt, FVOCI equity election, FVTPL) from the business model (4.1.2, 4.1.2A, B4.1.1-B4.1.6) and the SPPI test (4.1.3, B4.1.7-B4.1.26, including the 2024 contingent-feature amendments), applies the fair value option (4.1.5) and the equity FVOCI election (5.7.5); or classifies a financial liability (4.2.1-4.2.2) including embedded derivative separation (4.3.3) and own-credit presentation (5.7.7). Explains subsequent measurement and where gains and losses go.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "instrument": {
+            "type": "string",
+            "description": "Instrument",
+            "default": "Instrument"
+          },
+          "instrumentType": {
+            "type": "string",
+            "enum": [
+              "debt_asset",
+              "equity_asset",
+              "derivative",
+              "financial_liability"
+            ],
+            "description": "Type Options: debt_asset (Debt financial asset (loan, bond, receivable)); equity_asset (Equity investment); derivative (Derivative (stand-alone)); financial_liability (Financial liability)",
+            "default": "debt_asset"
+          },
+          "businessModel": {
+            "type": "string",
+            "enum": [
+              "hold_to_collect",
+              "hold_to_collect_and_sell",
+              "trading_or_fair_value_managed"
+            ],
+            "description": "Business model [IFRS 9.B4.1.2C, IFRS 9.B4.1.4A, IFRS 9.B4.1.5] Options: hold_to_collect (Hold to collect contractual cash flows); hold_to_collect_and_sell (Hold to collect AND sell); trading_or_fair_value_managed (Held for trading / managed on a fair value basis / other)",
+            "default": "hold_to_collect"
+          },
+          "fairValueOptionForMismatch": {
+            "type": "boolean",
+            "description": "Designate at FVTPL to eliminate an accounting mismatch [IFRS 9.4.1.5]",
+            "default": false
+          },
+          "leverageOrUnrelatedRisk": {
+            "type": "boolean",
+            "description": "Leverage, or returns linked to equity / commodity prices or other non-lending risks [IFRS 9.B4.1.7A, IFRS 9.B4.1.9]",
+            "default": false
+          },
+          "modifiedTimeValueSignificantlyDifferent": {
+            "type": "boolean",
+            "description": "Modified time value element: cash flows significantly different from benchmark [IFRS 9.B4.1.9B, IFRS 9.B4.1.9C, IFRS 9.B4.1.9D]",
+            "default": false
+          },
+          "contingentFeatureFailsSppi": {
+            "type": "boolean",
+            "description": "Contingent feature (incl. ESG-linked) could give non-SPPI or significantly different cash flows [IFRS 9.B4.1.10, IFRS 9.B4.1.8A]",
+            "default": false
+          },
+          "prepaymentNotPrincipalAndInterest": {
+            "type": "boolean",
+            "description": "Prepayment / extension amount not substantially unpaid principal and interest (+ reasonable compensation) [IFRS 9.B4.1.11, IFRS 9.B4.1.12]",
+            "default": false
+          },
+          "nonRecourseOrTrancheFailsLookThrough": {
+            "type": "boolean",
+            "description": "Non-recourse or contractually linked tranche fails the look-through [IFRS 9.B4.1.16, IFRS 9.B4.1.20]",
+            "default": false
+          },
+          "heldForTrading": {
+            "type": "boolean",
+            "description": "Held for trading [IFRS 9.5.7.5]",
+            "default": false
+          },
+          "contingentConsiderationInBusinessCombination": {
+            "type": "boolean",
+            "description": "Contingent consideration recognised by an acquirer in a business combination [IFRS 9.5.7.5]",
+            "default": false
+          },
+          "electFvociForEquity": {
+            "type": "boolean",
+            "description": "Irrevocably elect FVOCI presentation [IFRS 9.5.7.5]",
+            "default": false
+          },
+          "liabilityHeldForTrading": {
+            "type": "boolean",
+            "description": "Held for trading (incl. derivative liabilities, short positions) [IFRS 9.4.2.1(a)]",
+            "default": false
+          },
+          "liabilityDesignatedFvtpl": {
+            "type": "boolean",
+            "description": "Designated at FVTPL (accounting mismatch or managed on fair value basis) [IFRS 9.4.2.2]",
+            "default": false
+          },
+          "financialGuaranteeOrBelowMarketCommitment": {
+            "type": "boolean",
+            "description": "Financial guarantee contract or below-market loan commitment [IFRS 9.4.2.1(c), IFRS 9.4.2.1(d)]",
+            "default": false
+          },
+          "embeddedDerivativeNotCloselyRelated": {
+            "type": "boolean",
+            "description": "Contains an embedded derivative not closely related to the host [IFRS 9.4.3.3]",
+            "default": false
+          },
+          "ownCreditInOciCreatesMismatch": {
+            "type": "boolean",
+            "description": "Presenting own credit in OCI would create a P&L accounting mismatch [IFRS 9.5.7.8]",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_effective_interest_schedule",
+      "title": "IFRS 9: Effective interest rate & amortised cost",
+      "description": "Solves the effective interest rate that discounts the estimated future cash flows to the initial gross carrying amount (fair value plus transaction costs, net of integral fees) and builds the amortised cost schedule: opening balance, interest at the effective rate, cash received or paid, closing balance (IFRS 9.5.4.1, Appendix A, B5.4.1-B5.4.7). For assets that become credit-impaired, interest switches to the net amortised cost from that date (5.4.1(b)).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "instrument": {
+            "type": "string",
+            "description": "Instrument",
+            "default": "Bond"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "asset",
+              "liability"
+            ],
+            "description": "Asset or liability Options: asset (Financial asset); liability (Financial liability)",
+            "default": "asset"
+          },
+          "initialDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Initial recognition date"
+          },
+          "initialCarryingAmount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Initial carrying amount (fair value ± transaction costs, net of integral fees) [IFRS 9.5.1.1, IFRS 9.B5.4.1, IFRS 9.B5.4.2]"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "bond_terms",
+              "cash_flow_schedule"
+            ],
+            "description": "Cash flows from Options: bond_terms (Bond terms (face, coupon, frequency, maturity)); cash_flow_schedule (Explicit cash flow schedule)",
+            "default": "bond_terms"
+          },
+          "face": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Principal / face value"
+          },
+          "couponRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Coupon rate (annual, decimal)"
+          },
+          "frequencyMonths": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Months between coupons",
+            "default": 12
+          },
+          "maturityDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Maturity date"
+          },
+          "cashFlows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Date"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Amount"
+                }
+              },
+              "required": [
+                "date",
+                "amount"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Estimated future cash flows (receipts for assets / payments for liabilities, positive)",
+            "default": []
+          },
+          "creditImpairedFromDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Date the asset became credit-impaired (stage 3), if any [IFRS 9.5.4.1(b)]"
+          },
+          "lossAllowanceIfCreditImpaired": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Loss allowance from that date"
+          }
+        },
+        "required": [
+          "initialDate",
+          "initialCarryingAmount"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_expected_credit_loss",
+      "title": "IFRS 9: ECL staging & measurement",
+      "description": "Assigns an exposure to stage 1, 2, 3 or POCI (IFRS 9.5.5.3-5.5.14: significant increase in lifetime PD, 30 days past due presumption, low credit risk simplification, 90 days default presumption, credit-impaired evidence) and measures 12-month and lifetime expected credit losses as probability-weighted PD × LGD × EAD discounted at the effective interest rate across base, upside and downside scenarios (5.5.17-5.5.19). Returns the loss allowance, impairment charge, interest basis and journal.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "exposureName": {
+            "type": "string",
+            "description": "Exposure",
+            "default": "Corporate loan"
+          },
+          "grossCarryingAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Gross carrying amount"
+          },
+          "effectiveInterestRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Effective interest rate (discount rate, decimal) [IFRS 9.B5.5.44]"
+          },
+          "existingAllowance": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Existing loss allowance",
+            "default": 0
+          },
+          "purchasedOrOriginatedCreditImpaired": {
+            "type": "boolean",
+            "description": "Purchased or originated credit-impaired (POCI) [IFRS 9.5.5.13]",
+            "default": false
+          },
+          "originationLifetimeEclForPoci": {
+            "type": "number",
+            "minimum": 0,
+            "description": "POCI: lifetime ECL at initial recognition [IFRS 9.5.5.13, IFRS 9.5.5.14]",
+            "default": 0
+          },
+          "creditImpairedEvidence": {
+            "type": "boolean",
+            "description": "Objective evidence of credit impairment (significant financial difficulty, default, concession, probable bankruptcy) [IFRS 9.Appendix A]",
+            "default": false
+          },
+          "daysPastDue": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Days past due",
+            "default": 0
+          },
+          "rebut30DayPresumption": {
+            "type": "boolean",
+            "description": "30-day presumption rebutted with reasonable and supportable information [IFRS 9.5.5.11]",
+            "default": false
+          },
+          "rebut90DayPresumption": {
+            "type": "boolean",
+            "description": "90-day default presumption rebutted [IFRS 9.B5.5.37]",
+            "default": false
+          },
+          "lowCreditRiskAtReportingDate": {
+            "type": "boolean",
+            "description": "Low credit risk at the reporting date (e.g. investment grade) [IFRS 9.5.5.10]",
+            "default": false
+          },
+          "lifetimePdAtOrigination": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Lifetime PD (remaining term) expected at origination [IFRS 9.5.5.9]"
+          },
+          "lifetimePdNow": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Lifetime PD (remaining term) now"
+          },
+          "sicrPdMultiple": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 20,
+            "description": "Policy: SICR if lifetime PD has multiplied by at least",
+            "default": 2
+          },
+          "qualitativeSicrIndicator": {
+            "type": "boolean",
+            "description": "Qualitative SICR indicator (watchlist, forbearance, covenant breach) [IFRS 9.B5.5.17]",
+            "default": false
+          },
+          "weightBase": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Weight: base",
+            "default": 0.6
+          },
+          "weightUpside": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Weight: upside",
+            "default": 0.15
+          },
+          "weightDownside": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Weight: downside",
+            "default": 0.25
+          },
+          "lgdBase": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "LGD: base",
+            "default": 0.45
+          },
+          "lgdUpside": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "LGD: upside",
+            "default": 0.4
+          },
+          "lgdDownside": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "LGD: downside",
+            "default": 0.55
+          },
+          "pdCurve": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number",
+                  "minimum": 1,
+                  "description": "Year"
+                },
+                "ead": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Exposure at default"
+                },
+                "pdBase": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Marginal PD base"
+                },
+                "pdUpside": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Marginal PD upside"
+                },
+                "pdDownside": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Marginal PD downside"
+                }
+              },
+              "required": [
+                "year",
+                "ead",
+                "pdBase",
+                "pdUpside",
+                "pdDownside"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "PD curve"
+          }
+        },
+        "required": [
+          "grossCarryingAmount",
+          "effectiveInterestRate",
+          "lifetimePdAtOrigination",
+          "lifetimePdNow",
+          "pdCurve"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_modification",
+      "title": "IFRS 9: Modification & the 10% test",
+      "description": "Accounts for a renegotiation of contractual cash flows. Liabilities: applies the 10% quantitative test (B3.3.6), comparing the present value of the new cash flows plus fees paid (net of fees received) at the original effective interest rate with the present value of the remaining original cash flows, plus qualitative factors; extinguishment (3.3.2-3.3.3) or modification gain or loss. Assets (not derecognised): recalculates the gross carrying amount at the original effective interest rate and the modification gain or loss (5.4.3).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "instrument": {
+            "type": "string",
+            "description": "Instrument",
+            "default": "Bank loan"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "liability",
+              "asset"
+            ],
+            "description": "Side Options: liability (Financial liability (borrower)); asset (Financial asset (lender))",
+            "default": "liability"
+          },
+          "modificationDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Modification date"
+          },
+          "carryingAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Carrying amount (gross for assets) before modification"
+          },
+          "originalEir": {
+            "type": "number",
+            "minimum": -0.5,
+            "maximum": 1,
+            "description": "Original effective interest rate (annual, decimal) [IFRS 9.5.4.3, IFRS 9.B3.3.6]"
+          },
+          "feesPaidByBorrower": {
+            "type": "number",
+            "description": "Fees paid by borrower to lender (net of fees received) [IFRS 9.B3.3.6]",
+            "default": 0
+          },
+          "costsIncurred": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Third-party costs incurred by the reporting entity",
+            "default": 0
+          },
+          "qualitativeSubstantialChange": {
+            "type": "boolean",
+            "description": "Qualitative change is substantial (e.g. currency change, debt-to-equity feature, new counterparty)",
+            "default": false
+          },
+          "fairValueOfNewInstrument": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Fair value of new instrument (needed if extinguished / derecognised) [IFRS 9.3.3.3, IFRS 9.5.1.1]"
+          },
+          "remainingOriginalCashFlows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Date"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Amount"
+                }
+              },
+              "required": [
+                "date",
+                "amount"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Remaining ORIGINAL contractual cash flows",
+            "default": []
+          },
+          "modifiedCashFlows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Date"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Amount"
+                }
+              },
+              "required": [
+                "date",
+                "amount"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "MODIFIED contractual cash flows"
+          }
+        },
+        "required": [
+          "modificationDate",
+          "carryingAmount",
+          "originalEir",
+          "modifiedCashFlows"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_derecognition",
+      "title": "IFRS 9: Derecognition of financial assets",
+      "description": "Walks the IFRS 9 derecognition decision tree (3.2.2-3.2.9, B3.2.1): consolidation, part or whole, expiry of rights, transfer of contractual rights or a pass-through arrangement meeting all three conditions (3.2.5), transfer or retention of substantially all risks and rewards (3.2.6), and control (3.2.9). Computes the gain or loss on derecognition (3.2.12) or explains continuing recognition, collateralised borrowing (3.2.15) and continuing involvement (3.2.16).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "description": "Transaction",
+            "default": "Receivables factoring"
+          },
+          "transfereeConsolidated": {
+            "type": "boolean",
+            "description": "Transferee (e.g. SPE) is consolidated by the entity [IFRS 9.3.2.1]",
+            "default": false
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "whole",
+              "specifically_identified_part",
+              "proportionate_share"
+            ],
+            "description": "What is assessed [IFRS 9.3.2.2] Options: whole (The asset in its entirety); specifically_identified_part (Specifically identified cash flows); proportionate_share (Fully proportionate share of cash flows)",
+            "default": "whole"
+          },
+          "rightsExpired": {
+            "type": "boolean",
+            "description": "Contractual rights to the cash flows have expired [IFRS 9.3.2.3(a)]",
+            "default": false
+          },
+          "transferredContractualRights": {
+            "type": "boolean",
+            "description": "Contractual rights to receive the cash flows transferred [IFRS 9.3.2.4(a)]",
+            "default": true
+          },
+          "passThroughNoObligationUnlessCollected": {
+            "type": "boolean",
+            "description": "Pass-through: no obligation to pay unless collected [IFRS 9.3.2.5(a)]",
+            "default": false
+          },
+          "passThroughCannotSellOrPledge": {
+            "type": "boolean",
+            "description": "Pass-through: prohibited from selling or pledging the original asset [IFRS 9.3.2.5(b)]",
+            "default": false
+          },
+          "passThroughRemitWithoutDelay": {
+            "type": "boolean",
+            "description": "Pass-through: remits collections without material delay [IFRS 9.3.2.5(c)]",
+            "default": false
+          },
+          "risksAndRewards": {
+            "type": "string",
+            "enum": [
+              "substantially_all_transferred",
+              "substantially_all_retained",
+              "neither"
+            ],
+            "description": "Risks and rewards [IFRS 9.3.2.6, IFRS 9.3.2.7] Options: substantially_all_transferred (Substantially all transferred); substantially_all_retained (Substantially all retained); neither (Neither transferred nor retained)",
+            "default": "neither"
+          },
+          "transfereeCanSellUnilaterally": {
+            "type": "boolean",
+            "description": "Transferee has the practical ability to sell the asset unilaterally (control not retained) [IFRS 9.3.2.9]",
+            "default": false
+          },
+          "carryingAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Carrying amount of the asset transferred"
+          },
+          "considerationReceived": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Cash consideration received",
+            "default": 0
+          },
+          "newAssetsObtained": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Fair value of new assets obtained (e.g. servicing asset)",
+            "default": 0
+          },
+          "newLiabilitiesAssumed": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Fair value of new liabilities assumed (e.g. guarantee)",
+            "default": 0
+          },
+          "cumulativeOciRecycled": {
+            "type": "number",
+            "description": "Cumulative OCI gain/(loss) on FVOCI debt recycled [IFRS 9.3.2.12(b)]",
+            "default": 0
+          },
+          "maximumGuaranteeAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum amount of a guarantee given (continuing involvement) [IFRS 9.3.2.16(a)]",
+            "default": 0
+          }
+        },
+        "required": [
+          "carryingAmount"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_hedge_accounting",
+      "title": "IFRS 9: Hedge effectiveness & accounting",
+      "description": "Checks the IFRS 9 qualifying criteria (6.4.1: designation and documentation, economic relationship, credit risk not dominant, hedge ratio) and computes, period by period, the accounting for a fair value hedge (6.5.8: instrument and hedged item gains or losses in profit or loss, basis adjustment) or a cash flow hedge (6.5.11: 'lower of' test for the cash flow hedge reserve, OCI and ineffectiveness in profit or loss). Shows a dollar-offset ratio as a diagnostic only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "relationship": {
+            "type": "string",
+            "description": "Hedge relationship",
+            "default": "Interest rate swap hedge"
+          },
+          "hedgeType": {
+            "type": "string",
+            "enum": [
+              "cash_flow",
+              "fair_value"
+            ],
+            "description": "Type [IFRS 9.6.5.2] Options: cash_flow (Cash flow hedge); fair_value (Fair value hedge)",
+            "default": "cash_flow"
+          },
+          "designatedAndDocumentedAtInception": {
+            "type": "boolean",
+            "description": "Formally designated and documented at inception [IFRS 9.6.4.1(b)]",
+            "default": true
+          },
+          "economicRelationshipDemonstrated": {
+            "type": "boolean",
+            "description": "Economic relationship demonstrated (values move in opposite directions due to the hedged risk) [IFRS 9.6.4.1(c)(i), IFRS 9.B6.4.4]",
+            "default": true
+          },
+          "creditRiskDominates": {
+            "type": "boolean",
+            "description": "Effect of credit risk dominates the value changes [IFRS 9.6.4.1(c)(ii), IFRS 9.B6.4.7]",
+            "default": false
+          },
+          "hedgeRatioMatchesRiskManagement": {
+            "type": "boolean",
+            "description": "Hedge ratio equals that used for risk management (no deliberate imbalance) [IFRS 9.6.4.1(c)(iii), IFRS 9.B6.4.9]",
+            "default": true
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Date"
+                },
+                "cumulativeInstrumentChange": {
+                  "type": "number",
+                  "description": "Hedging instrument (cumulative)"
+                },
+                "cumulativeHedgedItemChange": {
+                  "type": "number",
+                  "description": "Hedged item (cumulative)"
+                }
+              },
+              "required": [
+                "date",
+                "cumulativeInstrumentChange",
+                "cumulativeHedgedItemChange"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Periods"
+          }
+        },
+        "required": [
+          "periods"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_lookup",
+      "title": "IFRS 9: Paragraph & topic lookup",
+      "description": "Searches the IFRS 9 knowledge base by paragraph number or keywords and returns paraphrased requirements with paragraph citations, so answers can be grounded and cited.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Paragraph number or keywords"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_own_credit",
+      "title": "IFRS 9: Own credit risk on liabilities designated at FVTPL (5.7.7)",
+      "description": "Splits the change in fair value of a financial liability designated at fair value through profit or loss between the part attributable to changes in market conditions (default method: change explained by the benchmark interest rate, B5.7.18) recognised in profit or loss and the remainder attributable to own credit risk recognised in OCI, unless that would create or enlarge an accounting mismatch (then all in profit or loss). OCI amounts are never reclassified to profit or loss.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "openingFairValue": {
+            "type": "number",
+            "description": "Fair value at the start of the period [IFRS 9.4.2.2]"
+          },
+          "closingFairValue": {
+            "type": "number",
+            "description": "Fair value at the end of the period"
+          },
+          "changeFromBenchmarkRates": {
+            "type": "number",
+            "description": "Change in fair value explained by benchmark rate movements (other market factors) [IFRS 9.B5.7.18]"
+          },
+          "accountingMismatch": {
+            "type": "boolean",
+            "description": "Presenting own credit in OCI would create or enlarge an accounting mismatch [IFRS 9.5.7.8, IFRS 9.B5.7.5]",
+            "default": false
+          }
+        },
+        "required": [
+          "openingFairValue",
+          "closingFairValue",
+          "changeFromBenchmarkRates"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs9_poci",
+      "title": "IFRS 9: Purchased or originated credit-impaired assets: credit-adjusted EIR (5.4.1(a), 5.5.13)",
+      "description": "Solves the credit-adjusted effective interest rate that discounts the cash flows expected at initial recognition (after expected credit losses) to the purchase price, computes first-year interest revenue on amortised cost, and measures the impairment gain or loss from a later revision of expected cash flows as the change in lifetime expected credit losses since initial recognition, discounted at the credit-adjusted rate.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "purchasePrice": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Purchase price (fair value at initial recognition) [IFRS 9.5.1.1]"
+          },
+          "expectedCashFlows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Year"
+                },
+                "cashFlow": {
+                  "type": "number",
+                  "description": "Cash flow"
+                }
+              },
+              "required": [
+                "year",
+                "cashFlow"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Expected cash flows"
+          },
+          "revisedExpectedCashFlows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Year"
+                },
+                "cashFlow": {
+                  "type": "number",
+                  "description": "Cash flow"
+                }
+              },
+              "required": [
+                "year",
+                "cashFlow"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Revised cash flows",
+            "default": []
+          }
+        },
+        "required": [
+          "purchasePrice",
+          "expectedCashFlows"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_disclosure_checklist",
+      "title": "IFRS 7: Disclosure checklist",
+      "description": "Generates the tailored IFRS 7 disclosure checklist from the entity's facts (significance of financial instruments, hedge accounting, fair value, credit, liquidity and market risk, transfers), pointing to the tool that prepares each quantitative table.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ecl": {
+            "type": "boolean",
+            "description": "Financial assets subject to IFRS 9 impairment (ECL) [IFRS 7.35A]",
+            "default": false
+          },
+          "modifications": {
+            "type": "boolean",
+            "description": "Modifications of financial assets with lifetime ECL [IFRS 7.35J]",
+            "default": false
+          },
+          "hedging": {
+            "type": "boolean",
+            "description": "Hedge accounting applied [IFRS 7.21A]",
+            "default": false
+          },
+          "offsetting": {
+            "type": "boolean",
+            "description": "Offsetting or master netting arrangements [IFRS 7.13A]",
+            "default": false
+          },
+          "collateral": {
+            "type": "boolean",
+            "description": "Collateral pledged or held [IFRS 7.14]",
+            "default": false
+          },
+          "liabDesignated": {
+            "type": "boolean",
+            "description": "Financial liabilities designated at FVTPL [IFRS 7.10]",
+            "default": false
+          },
+          "assetsDesignated": {
+            "type": "boolean",
+            "description": "Financial assets designated at FVTPL [IFRS 7.9]",
+            "default": false
+          },
+          "fvociEquity": {
+            "type": "boolean",
+            "description": "Equity investments designated at FVOCI [IFRS 7.11A]",
+            "default": false
+          },
+          "fvociDebt": {
+            "type": "boolean",
+            "description": "Debt instruments at FVOCI [IFRS 7.16A]",
+            "default": false
+          },
+          "fvtplDebt": {
+            "type": "boolean",
+            "description": "Debt instruments at FVTPL (outside impairment) [IFRS 7.36]",
+            "default": false
+          },
+          "reclassification": {
+            "type": "boolean",
+            "description": "Financial assets reclassified [IFRS 7.12B]",
+            "default": false
+          },
+          "defaults": {
+            "type": "boolean",
+            "description": "Defaults or breaches on loans payable [IFRS 7.18]",
+            "default": false
+          },
+          "amortisedCostDerecognised": {
+            "type": "boolean",
+            "description": "Amortised cost assets derecognised with gain/loss [IFRS 7.20A]",
+            "default": false
+          },
+          "dayOne": {
+            "type": "boolean",
+            "description": "Deferred day-one gains or losses [IFRS 7.28]",
+            "default": false
+          },
+          "transfers": {
+            "type": "boolean",
+            "description": "Transfers of financial assets (securitisation, factoring) [IFRS 7.42A]",
+            "default": false
+          },
+          "supplierFinance": {
+            "type": "boolean",
+            "description": "Supplier finance arrangements [IFRS 7.B11F]",
+            "default": false
+          },
+          "ibor": {
+            "type": "boolean",
+            "description": "Instruments still affected by interest rate benchmark reform [IFRS 7.24H]",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_categories_and_fair_value",
+      "title": "IFRS 7: Categories & fair value comparison (8, 25-29)",
+      "description": "Builds the IFRS 7.8 table of carrying amounts by IFRS 9 category with a reconciliation to statement of financial position line items, and the paragraph 25-29 comparison of fair value with carrying amount by class (applying the 29 exemptions for short-term items and lease liabilities). Flags the follow-on disclosures triggered by designated and FVOCI categories.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entity": {
+            "type": "string",
+            "description": "Entity",
+            "default": "Entity"
+          },
+          "reportingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Reporting date"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string",
+                  "description": "Class"
+                },
+                "lineItem": {
+                  "type": "string",
+                  "description": "Balance sheet line item"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "fa_fvtpl_mandatory",
+                    "fa_fvtpl_designated",
+                    "fa_fvoci_debt",
+                    "fa_fvoci_equity",
+                    "fa_amortised_cost",
+                    "fl_fvtpl_held_for_trading",
+                    "fl_fvtpl_designated",
+                    "fl_amortised_cost"
+                  ],
+                  "description": "IFRS 9 category Options: fa_fvtpl_mandatory (Financial assets at FVTPL: mandatorily measured); fa_fvtpl_designated (Financial assets at FVTPL: designated); fa_fvoci_debt (Financial assets at FVOCI: debt instruments); fa_fvoci_equity (Financial assets at FVOCI: equity investments designated); fa_amortised_cost (Financial assets at amortised cost); fl_fvtpl_held_for_trading (Financial liabilities at FVTPL: held for trading); fl_fvtpl_designated (Financial liabilities at FVTPL: designated); fl_amortised_cost (Financial liabilities at amortised cost)"
+                },
+                "carryingAmount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Carrying amount"
+                },
+                "fairValue": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Fair value (amortised cost items)"
+                },
+                "fvExemption": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "approximates_fair_value",
+                    "lease_liability"
+                  ],
+                  "description": "Fair value exemption (29) Options: none (None: disclose fair value); approximates_fair_value (Carrying amount approximates fair value (29(a))); lease_liability (Lease liability (29(d)))",
+                  "default": "none"
+                }
+              },
+              "required": [
+                "item",
+                "lineItem",
+                "category",
+                "carryingAmount"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Instruments"
+          }
+        },
+        "required": [
+          "reportingDate",
+          "instruments"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_loss_allowance_reconciliation",
+      "title": "IFRS 7: Loss allowance reconciliation (35H)",
+      "description": "Prepares the IFRS 7.35H reconciliation of the loss allowance from opening to closing, by ECL stage (12-month, lifetime not credit-impaired, lifetime credit-impaired, purchased or originated credit-impaired), checks that stage transfers net to zero, that write-offs reduce the allowance, and that the roll-forward agrees with the closing balances reported.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "classOfInstrument": {
+            "type": "string",
+            "description": "Class of financial instrument",
+            "default": "Loans to customers"
+          },
+          "period": {
+            "type": "string",
+            "description": "Period",
+            "default": "Year ended 31 December 2026"
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "movement": {
+                  "type": "string",
+                  "enum": [
+                    "opening",
+                    "transfer_to_stage1",
+                    "transfer_to_stage2",
+                    "transfer_to_stage3",
+                    "new_originated_purchased",
+                    "derecognised_repaid",
+                    "write_offs",
+                    "remeasurement",
+                    "model_changes",
+                    "modifications",
+                    "fx_and_other"
+                  ],
+                  "description": "Movement Options: opening (Opening loss allowance); transfer_to_stage1 (Transfer to 12-month ECL (stage 1)); transfer_to_stage2 (Transfer to lifetime ECL not credit-impaired (stage 2)); transfer_to_stage3 (Transfer to lifetime ECL credit-impaired (stage 3)); new_originated_purchased (New financial assets originated or purchased); derecognised_repaid (Financial assets derecognised / repaid); write_offs (Write-offs); remeasurement (Net remeasurement of loss allowance); model_changes (Changes to models and risk parameters); modifications (Modifications of contractual cash flows); fx_and_other (Foreign exchange and other movements)"
+                },
+                "stage1": {
+                  "type": "number",
+                  "description": "Stage 1",
+                  "default": 0
+                },
+                "stage2": {
+                  "type": "number",
+                  "description": "Stage 2",
+                  "default": 0
+                },
+                "stage3": {
+                  "type": "number",
+                  "description": "Stage 3",
+                  "default": 0
+                },
+                "poci": {
+                  "type": "number",
+                  "description": "POCI",
+                  "default": 0
+                }
+              },
+              "required": [
+                "movement"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Movements"
+          },
+          "reportedClosing": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stage1": {
+                  "type": "number",
+                  "description": "Stage 1",
+                  "default": 0
+                },
+                "stage2": {
+                  "type": "number",
+                  "description": "Stage 2",
+                  "default": 0
+                },
+                "stage3": {
+                  "type": "number",
+                  "description": "Stage 3",
+                  "default": 0
+                },
+                "poci": {
+                  "type": "number",
+                  "description": "POCI",
+                  "default": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "description": "Closing (one row)",
+            "default": []
+          }
+        },
+        "required": [
+          "movements"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_provision_matrix",
+      "title": "IFRS 7: Provision matrix for trade receivables (35N)",
+      "description": "Computes lifetime expected credit losses for trade receivables, contract assets or lease receivables under the simplified approach using a provision matrix (IFRS 9.5.5.15, B5.5.35): historical loss rates by ageing bucket adjusted for forward-looking information, the resulting allowance and its movement, and the IFRS 7.35N disclosure table.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "portfolio": {
+            "type": "string",
+            "description": "Portfolio",
+            "default": "Trade receivables"
+          },
+          "reportingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Reporting date"
+          },
+          "existingAllowance": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Loss allowance currently recognised",
+            "default": 0
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "bucket": {
+                  "type": "string",
+                  "description": "Bucket"
+                },
+                "grossCarryingAmount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Gross carrying amount"
+                },
+                "historicalLossRate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Historical loss rate (decimal)"
+                },
+                "forwardLookingAdjustment": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1,
+                  "description": "Forward-looking adjustment (percentage points, decimal)",
+                  "default": 0
+                }
+              },
+              "required": [
+                "bucket",
+                "grossCarryingAmount",
+                "historicalLossRate"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Buckets"
+          }
+        },
+        "required": [
+          "reportingDate",
+          "buckets"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_liquidity_maturity_analysis",
+      "title": "IFRS 7: Liquidity maturity analysis (39, B11)",
+      "description": "Generates the IFRS 7.39(a) maturity analysis of non-derivative financial liabilities from contractual terms: undiscounted principal and interest cash flows placed in time bands (B11), amounts payable on demand in the earliest band (B11C(a)), issued financial guarantees at the maximum amount in the earliest period they can be called (B11C(c)), variable interest at the rate at the reporting date (B11D). Compares totals with carrying amounts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reportingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Reporting date"
+          },
+          "liabilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Liability"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "bullet_loan",
+                    "level_payments",
+                    "single_payment",
+                    "on_demand",
+                    "financial_guarantee"
+                  ],
+                  "description": "Type Options: bullet_loan (Bullet loan / bond); level_payments (Level payments (leases)); single_payment (Single payment (payables)); on_demand (Payable on demand); financial_guarantee (Financial guarantee issued (maximum amount))"
+                },
+                "carryingAmount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Carrying amount"
+                },
+                "principal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Principal / payment amount / guarantee maximum"
+                },
+                "annualRate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Interest rate (decimal; current rate if variable) [IFRS 7.B11D]",
+                  "default": 0
+                },
+                "frequencyMonths": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 12,
+                  "description": "Months between payments",
+                  "default": 12
+                },
+                "dueDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Final due date"
+                },
+                "firstPaymentDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "First payment date after reporting date (level payments)"
+                }
+              },
+              "required": [
+                "name",
+                "kind",
+                "carryingAmount",
+                "principal",
+                "dueDate"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Liabilities"
+          }
+        },
+        "required": [
+          "reportingDate",
+          "liabilities"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_market_risk_sensitivity",
+      "title": "IFRS 7: Market risk sensitivity (40)",
+      "description": "Computes the IFRS 7.40 sensitivity analysis for each type of market risk: floating-rate interest on net exposures, fair value of fixed-rate instruments via modified duration, translation of foreign-currency monetary items, and equity or commodity price changes, for reasonably possible upward and downward shifts. Separates the effect on profit or loss from the effect on equity (OCI), after tax.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reportingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Reporting date"
+          },
+          "taxRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Tax rate (decimal)",
+            "default": 0.25
+          },
+          "exposures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "description": "Exposure"
+                },
+                "riskType": {
+                  "type": "string",
+                  "enum": [
+                    "interest_rate",
+                    "currency",
+                    "equity_price",
+                    "commodity_price"
+                  ],
+                  "description": "Risk Options: interest_rate (Interest rate); currency (Currency); equity_price (Equity price); commodity_price (Commodity price)"
+                },
+                "measure": {
+                  "type": "string",
+                  "enum": [
+                    "floating_rate",
+                    "fixed_rate_fair_value",
+                    "fx_monetary",
+                    "price"
+                  ],
+                  "description": "How it affects results Options: floating_rate (Floating-rate balance: interest income/expense for one year); fixed_rate_fair_value (Fixed-rate instrument at fair value: price change via duration); fx_monetary (Foreign-currency monetary item: retranslation); price (Price-sensitive instrument: fair value change)"
+                },
+                "exposure": {
+                  "type": "number",
+                  "description": "Exposure (functional currency)"
+                },
+                "modifiedDuration": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Modified duration (fixed-rate FV only)"
+                },
+                "shift": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Reasonably possible change (decimal) [IFRS 7.40(a), IFRS 7.B19]"
+                },
+                "location": {
+                  "type": "string",
+                  "enum": [
+                    "pl",
+                    "oci"
+                  ],
+                  "description": "Recognised in Options: pl (Profit or loss); oci (OCI (equity))",
+                  "default": "pl"
+                }
+              },
+              "required": [
+                "description",
+                "riskType",
+                "measure",
+                "exposure",
+                "shift"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Exposures"
+          }
+        },
+        "required": [
+          "reportingDate",
+          "exposures"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_offsetting",
+      "title": "IFRS 7: Offsetting & master netting (13A-13F)",
+      "description": "Builds the IFRS 7.13C offsetting table for financial assets and liabilities: gross amounts, amounts offset under IAS 32.42, net amounts presented, related amounts not offset (financial instruments and cash collateral, capped so they do not exceed the net amount presented per instrument, 13D), and net amounts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reportingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Reporting date"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "description": "Description"
+                },
+                "side": {
+                  "type": "string",
+                  "enum": [
+                    "asset",
+                    "liability"
+                  ],
+                  "description": "Side Options: asset (Financial asset); liability (Financial liability)"
+                },
+                "grossAmount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "(a) Gross amount"
+                },
+                "amountOffset": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "(b) Amount offset (IAS 32.42)",
+                  "default": 0
+                },
+                "financialInstrumentsNotOffset": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "(d)(i) Financial instruments not offset",
+                  "default": 0
+                },
+                "cashCollateral": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "(d)(ii) Cash collateral",
+                  "default": 0
+                }
+              },
+              "required": [
+                "description",
+                "side",
+                "grossAmount"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Instruments subject to offsetting or netting arrangements"
+          }
+        },
+        "required": [
+          "reportingDate",
+          "instruments"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_lookup",
+      "title": "IFRS 7: Paragraph & topic lookup",
+      "description": "Searches the IFRS 7 knowledge base by paragraph number or keywords and returns paraphrased requirements with paragraph citations, so answers can be grounded and cited.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Paragraph number or keywords"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs7_supplier_finance",
+      "title": "IFRS 7: Supplier finance arrangements (IAS 7.44F-44H, B11F(j))",
+      "description": "Builds the supplier finance disclosures: carrying amounts of liabilities in each arrangement and their line items, the portion already paid to suppliers by finance providers, ranges of payment due dates against comparable trade payables, and non-cash changes, and flags the extension of payment terms for the liquidity risk discussion.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "arrangements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "arrangement": {
+                  "type": "string",
+                  "description": "Arrangement"
+                },
+                "carryingAmount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Carrying amount of liabilities in the arrangement [IAS 7.44H(b)(i)]"
+                },
+                "alreadyPaidByFinanceProvider": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Of which suppliers already paid by the finance provider [IAS 7.44H(b)(ii)]"
+                },
+                "lineItem": {
+                  "type": "string",
+                  "description": "Line item where presented"
+                },
+                "dueDaysFrom": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Payment due date range: from (days after invoice) [IAS 7.44H(b)(iii)]"
+                },
+                "dueDaysTo": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Payment due date range: to (days after invoice)"
+                }
+              },
+              "required": [
+                "arrangement",
+                "carryingAmount",
+                "alreadyPaidByFinanceProvider",
+                "lineItem",
+                "dueDaysFrom",
+                "dueDaysTo"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Supplier finance arrangements"
+          },
+          "comparablePayablesDueDaysFrom": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Comparable trade payables: due from (days)"
+          },
+          "comparablePayablesDueDaysTo": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Comparable trade payables: due to (days)"
+          },
+          "nonCashChanges": {
+            "type": "number",
+            "description": "Non-cash changes in carrying amounts (for example business combinations, FX) [IAS 7.44H(c)]",
+            "default": 0
+          }
+        },
+        "required": [
+          "arrangements",
+          "comparablePayablesDueDaysFrom",
+          "comparablePayablesDueDaysTo"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

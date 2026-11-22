@@ -1,0 +1,14 @@
+{
+  "name": "ifrs9-credit-loss-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "IFRS 9 and IFRS 7 Credit Loss Agent: Classification, effective interest, expected credit losses, POCI, modifications, hedge accounting and the matching IFRS 7 risk disclosures. Demo and educational use only.",
+  "scripts": {
+    "start": "node dist/server.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "SEE LICENSE IN LICENSE.md"
+}
