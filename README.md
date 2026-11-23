@@ -1,5 +1,7 @@
 # IFRS 9 and IFRS 7 Credit Loss Agent
 
+[![IFRS 9 and IFRS 7 Credit Loss Agent MCP server](https://mcprush.com/badge/ifrs-9-and-ifrs-7-credit-loss-agent-mcp/card.svg)](https://mcprush.com/to/ifrs-9-and-ifrs-7-credit-loss-agent-mcp?ref=badge)
+
 Classification, effective interest, expected credit losses, POCI, modifications, hedge accounting and the matching IFRS 7 risk disclosures.
 
 > FOR DEMONSTRATION AND EDUCATIONAL PURPOSES ONLY. This output is not accounting, audit, tax or legal advice, and no liability whatsoever is assumed for its results or for any decision based on them. Paragraph references point to the IFRS Accounting Standards issued by the IASB; the standards' text is not reproduced. Results depend entirely on the facts entered and must be independently verified by a qualified professional against the current authoritative text before any use.
